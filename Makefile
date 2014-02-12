@@ -4,13 +4,12 @@ CFLAGS = -c -Wall -x c -I ./include/ -O2 -ffunction-sections -fdata-sections -fu
 
 all : build
 
-build : main.o
-	$(CC) lib/main.o -o bin/tarea-lab3 # TODO add tags for all necesary libs to make the main
+build : main.o masker.o
+	$(CC) lib/main.o -o bin/tarea-lab3
 	chmod 774 bin/tarea-lab3
 
 main.o :
 	$(CC) $(CFLAGS) src/main.c -o lib/main.o
-# TODO insert makefile tasks
 
 clean :
 	rm -f bin/*
@@ -20,4 +19,7 @@ cleanall :
 
 exec :
 	bin/tarea-lab3
+
+masker.o :
+	$(CC) $(CFLAGS) src/masker.c -o lib/masker.o
 
