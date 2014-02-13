@@ -35,6 +35,7 @@ int main(void)
 		printf("Men\u00FA de programas en la tarea.\n");
 		printf("Introduzca la opci\u00F3n que desea ejecutar:\n");
 		printf("1\tAplicar m\u00E1scaras sobre datos a nivel de bits.\n");
+		printf("2\tComunicaci\u00F3n de mensajes por la red entre cliente y servidor");
 		printf("E\tSalir.\n");
 		fgets(input, 1024, stdin);
 		if(!strlen(input))
@@ -57,7 +58,7 @@ int main(void)
 		if((pid = fork()) == -1)
 		{
 			//error
-		printf("Ocurri\u00F3 un error al invocar el programa\n");
+			printf("Ocurri\u00F3 un error al invocar el programa\n");
 		}
 		else if(pid == 0)
 		{
