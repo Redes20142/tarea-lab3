@@ -1,5 +1,6 @@
 #include "random_lib.h"
 #include <stdlib.h>
+#include <string.h>
 
 /*
  * Aplica una máscara de valor constante a un número aleatoreo de 32 bits.
@@ -19,6 +20,7 @@ unsigned int mask = 20011992;
 
 // prototipos de funciones
 char *dectobin(int);
+void strrev(char *);
 
 /*
  * Ejecuta el programa: crea un número a enmascarar, muestra sus bits, los de
@@ -44,9 +46,8 @@ int main(void)
 	result = mask ^to_mask;
 	printf("El resultado es: (En decimal)\t%i\n", result);
 	printf("(En binario)\t%s\n\n", dectobin(result));
-	printf("Se aplica la m\u00E1scara con XOR\n\n");
 	char nothing[1024];
-	printf("Presione una tecla para salir...\n");
+	printf("Presione intro para salir...\n");
 	fgets(nothing, 1024, stdin);
 	system("clear");
 	return 0;
@@ -67,49 +68,96 @@ char *dectobin(int number)
 		sign = 1;
 		number *= -1;
 	}//recuerda el signo original del número y usa su valor absoluto
-	char* bits = "00000000000000000000000000000000";
+	/*char bits[32] = "";
+	char aux[32] = "";*/
+	char *aux = malloc(sizeof(char*) *32);
 	unsigned short int i =  31;
 	while(number > 1)
 	{
 		if(number %2)
 		{
-			bits[i] = '1';
+			strcat(aux, "1");
 		}
 		else
 		{
-			bits[i] = '0';
+			strcat(aux, "0");
 		}//coloca el dígito binario correspondiente
 		number /= 2;
 		i--;
 	}//reduce el número a su expresión binaria
-	bits[i] = number %2;
+	if(number %2)
+	{
+		strcat(aux, "1");
+	}
+	else
+	{
+		strcat(aux, "0");
+	}//asigna el último resiuo
+	while(i > 0)
+	{
+		strcat(aux, "0");
+		i--;
+	}//rellena con 0
+	strrev(aux);
 	if(sign)
 	{
 		sign = 0;
+		char *bits = malloc(sizeof(char*) *32);
 		for(i = 31; i >= 0; i--)
 		{
-			if(bits[i] == '0')
+			if(aux[i] == '0')
 			{
 				if(sign)
 				{
-					bits[i] = '1';
+					strcat(bits, "1");
+				}
+				else
+				{
+					strcat(bits, "0");
 				}//si ya se encontró el primer 1, invierte el 0
 			}
 			else
 			{
 				if(sign)
 				{
-					bits[i] = '0';
+					strcat(bits, "0");
 				}
 				else
 				{
 					sign = 1;
+					strcat(bits, "1");
 				}//si ya encontró el primer 1, invierte el 1. Si encuentra
 				//el primer 1, lo deja tal cual e indica que encontró el
 				//prier 1
 			}//actua dependiendo si encuentra 1 ó 0
 		}//recorre la cadena sacando el complemento a 2
+		strrev(bits);
+		return bits;
+	}
+	else
+	{
+		return aux;
 	}//si el signo era negativo, obtiene su complemento a 2
-	return bits;
 }//dectobin
+
+/*
+ * Invierte una cadena
+ */
+void strrev(char *string)
+{
+	int length, c;
+	char *begin, *end, temp;
+	length = strlen(string); 
+	begin = string;
+	end = string; 
+	for ( c = 0 ; c < ( length - 1 ) ; c++ ) end++;
+	for ( c = 0 ; c < length/2 ; c++ ) 
+	{        
+		temp = *end;
+		*end = *begin;
+		*begin = temp; 
+		begin++;
+    	end--;
+   }//invierte la cadena
+}//strrev
 

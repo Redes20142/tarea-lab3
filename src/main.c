@@ -28,6 +28,8 @@ int main(void)
 	printf("Alumnos:\nManuel Ignacio Castillo L\u00F3pez\n");
 	printf("Mijail Guti\u00E9rrez Vald\u00E9s\n\n");
 	printf("TAREA DE LABORATORIO 3\n");
+	int pid;
+	char *args[2];
 	while(1)
 	{
 		printf("Men\u00FA de programas en la tarea.\n");
@@ -40,31 +42,11 @@ int main(void)
 			printf("Error. Debe introducir una opci\u00F3n\n\n");
 			continue;
 		}//si se introduce la cadena vacía
-		int pid;
 		switch(tolower(input[0]))
 		{
 		case '1' :
-			if((pid = fork()) == -1)
-			{
-				//error
-			printf("Ocurri\u00F3 un error al invocar el programa\n");
-			}
-			else if(pid == 0)
-			{
-				//hijo
-				execvp("./bin/masker", NULL);
-				printf("No se pudo cargar el programa\n");
-			}
-			else
-			{
-				//padre
-				int status = 0;
-				wait(&status);
-				if(status)
-				{
-					printf("Ocurri\u00F3 un error al terminar la ejecuci\u00F3n del programa anterior\n");
-				}//indica el resultado de la ejecución
-			}//realiza una acción de acuerdo al proceso ó estado de error
+			args[0] = "./bin/masker";
+			args[1] = NULL;
 			break;
 		case 'e' :
 			system("clear");
@@ -72,6 +54,27 @@ int main(void)
 		default :
 			printf("Error. Opci\u00F3n inv\u00E1lida: %c\n\n", tolower(input[0]));
 		}//actua dependiendo la selección
+		if((pid = fork()) == -1)
+		{
+			//error
+		printf("Ocurri\u00F3 un error al invocar el programa\n");
+		}
+		else if(pid == 0)
+		{
+			//hijo
+			execvp(args[0], args);
+			printf("No se pudo cargar el programa\n");
+		}
+		else
+		{
+			//padre
+			int status = 0;
+			wait(&status);
+			if(status)
+			{
+				printf("Ocurri\u00F3 un error al terminar la ejecuci\u00F3n del programa anterior\n");
+			}//indica el resultado de la ejecución
+		}//realiza una acción de acuerdo al proceso ó estado de error
 	}//ejecuta indefinidamente el menú
 	return 0;
 }//main
