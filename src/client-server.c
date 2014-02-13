@@ -21,8 +21,8 @@
 
 //prototipos de funciones
 void error(const char *);
-void execute_client(void);
-void execute_server(void);
+void execute_client(pid_t);
+void execute_server(pid_t);
 
 /*
  * Inicia la ejecución de ambos procesos: El hijo le pregunta al usuario por un
@@ -40,12 +40,12 @@ int main(void)
 	else if(pid == 0)
 	{
 		//hijo
-		execute_client();
+		execute_client(getpid());
 	}
 	else
 	{
 		//padre
-		execute_server();
+		execute_server(getpid());
 	}//actua de acuerdo al proceso ó estado de error
 	return 0;
 }//main
@@ -60,9 +60,10 @@ void error(const char *msg)
 }//error
 
 /*
- * Ejecuta un cliente de mensajería
+ * Ejecuta un cliente de mensajería.
+ * Se le pasa el PID con propósito de poderlo identificar en monitoreos de red
  */
-void execute_client()
+void execute_client(pid_t pid)
 {
 	int sockfd, portno, n;
 	struct sockaddr_in serv_addr;
@@ -72,11 +73,11 @@ void execute_client()
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0)
 	{
-		error("(Hijo) ERROR al abrir el socket");
+		error("(Hijo) ERROR al abrir el socket\n");
 	}//comprueba que se tenga un socket válido
 	server = gethostbyname("localhost");
 	if (server == NULL) {
-	    fprintf(stderr,"(Hijo) ERROR, host inv\u00E1lido\n");
+	    fprintf(stderr,"(Hijo PID %d) ERROR, host inv\u00E1lido\n", pid);
 	    exit(0);
 	}//comprueba que se haya podido resolver el server
 	bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -87,28 +88,28 @@ void execute_client()
 	serv_addr.sin_port = htons(portno);
 	if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
 	{
-		error("(Hijo) ERROR al conectar");
+		error("(Hijo) ERROR al conectar\n");
 	}//establece conexión y comprueba el estado de la misma
 	printf("(Hijo) Cliente de env\u00EDo de mensajes.\n\n");
 	while(1)
 	{
-		printf("(Hijo) Introduzca un mensaje para enviar al server.\n");
-		printf("(Hijo) Si desea salir introduzca \"EXIT\".");
-		printf("Esto enviar\u00E1 una se\u00F1al de apagado al servidor tambi\u00E9n.\n");
+		printf("(Hijo PID %d) Introduzca un mensaje para enviar al server.\n", pid);
+		printf("(Hijo PID %d) Si desea salir introduzca \"EXIT\".", pid);
+		printf(" Esto enviar\u00E1 una se\u00F1al de apagado al servidor tambi\u00E9n.\n");
 		bzero(buffer,256);
 	    fgets(buffer,255,stdin);
 	    strtok(buffer, "\n");
 	    n = write(sockfd,buffer,strlen(buffer));
 		if (n < 0)
 		{
-			error("(Hijo) ERROR al escribir al socket");
+			error("(Hijo) ERROR al escribir al socket\n");
 		}
 		else
 		{
 			if(strcmp(buffer, "EXIT") == 0)
 			{
 				close(sockfd);
-				printf("(Hijo) Fin del proceso cliente\n");
+				printf("(Hijo PID %d) Fin del proceso cliente\n", pid);
 				exit(EXIT_SUCCESS);
 			}//si lo que se introdujo fue el comando de salida
 		}//comprueba que la escritura haya sido exitosa
@@ -116,7 +117,7 @@ void execute_client()
 		n = read(sockfd,buffer,255);
 		if (n < 0)
 		{
-			error("(Hijo) ERROR al leer el socket");
+			error("(Hijo) ERROR al leer el socket\n");
 		}//lee la respuesta del servidor
 		printf("Respuesta del server: \"%s\"\n",buffer);
 	}//ejecuta indefinidamente preguntando por mensajes a enviar al usuario
@@ -124,8 +125,9 @@ void execute_client()
 
 /*
  * Ejecuta un servidor de mensajería
+ * Se le pasa el PID con propósito de poderlo identificar en monitoreos de red
  */
-void execute_server()
+void execute_server(pid_t pid)
 {
 	int sockfd, newsockfd, portno;
      socklen_t clilen;
@@ -135,7 +137,7 @@ void execute_server()
      sockfd = socket(AF_INET, SOCK_STREAM, 0);
      if (sockfd < 0)
      {
-     	error("(Padre) ERROR al abrir el socket");
+     	error("(Padre) ERROR al abrir el socket\n");
      }//si ocurrió un problema al obtener un socket
      bzero((char *) &serv_addr, sizeof(serv_addr));
      portno = 10080;
@@ -145,38 +147,38 @@ void execute_server()
      if (bind(sockfd, (struct sockaddr *) &serv_addr,
               sizeof(serv_addr)) < 0)
      {
-     	error("(Padre) ERROR al enlacar");
+     	error("(Padre) ERROR al enlazar\n");
      }//enlaza el socket
-     listen(sockfd,5);
+     listen(sockfd,1);//sólo va a aceptar un cliente
      clilen = sizeof(cli_addr);
      newsockfd = accept(sockfd, 
                  (struct sockaddr *) &cli_addr, 
                  &clilen);
      if (newsockfd < 0)
      {
-     	error("(Padre) ERROR al aceptar");
+     	error("(Padre) ERROR al aceptar\n");
      }//si el socket de respuesta no es válido
-     printf("(Padre) Servidor de mensajes\n");
+     printf("(Padre PID %i) Servidor de mensajes\n", pid);
      while(1)
      {
      	bzero(buffer,256);
 		n = read(newsockfd,buffer,255);
 		if (n < 0)
 		{
-			error("(Padre) ERROR al leer el socket");
+			error("(Padre) ERROR al leer el socket\n");
 		}//si se pudo leer el socjet de entrada
-		printf("(Padre) Se ha recibido el mensaje: \"%s\"\n",buffer);
+		printf("(Padre PID %d) Se ha recibido el mensaje: \"%s\"\n", pid, buffer);
 		if(strcmp(buffer, "EXIT") == 0)
 		{
 			close(newsockfd);
 	    	close(sockfd);
-	    	printf("(Padre) Fin del proceso servidor");
+	    	printf("(Padre PID %d) Fin del proceso servidor\n", pid);
 	    	exit(EXIT_SUCCESS);
 		}//si se recibió el comando de salida
 		n = write(newsockfd,"Mensaje recibido",18);
 		if (n < 0)
 		{
-			error("(Padre) ERROR al escribir al socket");
+			error("(Padre) ERROR al escribir al socket\n");
 		}//si ocurre un error al devolver el mensaje
      }//ejecuta indefinidamente
 }//execute_server
