@@ -55,7 +55,7 @@ int main(void)
     {
     	error("(Servidor) ERROR al aceptar\n");
     }//si el socket de respuesta no es válido
-    printf("(Servidor PID %i) Servidor de mensajes\n", pid);
+    printf("(Servidor) Servidor de mensajes\n");
     while(1)
     {
     	bzero(buffer,256);
@@ -64,12 +64,12 @@ int main(void)
 		{
 			error("(Servidor) ERROR al leer el socket\n");
 		}//si se pudo leer el socjet de entrada
-		printf("(Servidor PID %d) Se ha recibido el mensaje: \"%s\"\n", pid, buffer);
+		printf("(Servidor) Se ha recibido el mensaje: \"%s\"\n", buffer);
 		if(strcmp(buffer, "EXIT") == 0)
 		{
 			close(newsockfd);
 		   	close(sockfd);
-		   	printf("(Servidor PID %d) Fin del proceso servidor\n", pid);
+		   	printf("(Servidor) Fin del proceso servidor\n");
 		   	exit(EXIT_SUCCESS);
 		}//si se recibió el comando de salida
 		n = write(newsockfd,"Mensaje recibido",18);

@@ -29,13 +29,14 @@ int main(void)
 	printf("Mijail Guti\u00E9rrez Vald\u00E9s\n\n");
 	printf("TAREA DE LABORATORIO 3\n");
 	int pid;
-	char *args[2];
+	char *args[3];
 	while(1)
 	{
 		printf("Men\u00FA de programas en la tarea.\n");
 		printf("Introduzca la opci\u00F3n que desea ejecutar:\n");
 		printf("1\tAplicar m\u00E1scaras sobre datos a nivel de bits.\n");
-		printf("2\tComunicaci\u00F3n de mensajes por la red entre cliente y servidor");
+		printf("2\tIniciar el cliente de mensajes");
+		printf("3\tIniciar  el servidor");
 		printf("E\tSalir.\n");
 		fgets(input, 1024, stdin);
 		if(!strlen(input))
@@ -47,14 +48,26 @@ int main(void)
 		{
 		case '1' :
 			args[0] = "./bin/masker";
-			args[1] = NULL;
+			printf("Introduzca un entero de 32 bits a utilizar como m\u00E1scara\n");
+			fgets(args[1], 256, stdin);
+			break;
+		case '2' :
+			args[0] = "./bin/client";
+			printf("Especifique el server\n");
+			fgets(args[1], 256, stdin);
+			break;
+		case '3' :
+			args[0] = "./bin/server";
+			args[1] = "0";
 			break;
 		case 'e' :
 			system("clear");
 			exit(EXIT_SUCCESS);
 		default :
 			printf("Error. Opci\u00F3n inv\u00E1lida: %c\n\n", tolower(input[0]));
+			continue;
 		}//actua dependiendo la selección
+		args[2] = NULL;
 		if((pid = fork()) == -1)
 		{
 			//error

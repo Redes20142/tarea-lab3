@@ -4,7 +4,7 @@ CFLAGS = -c -Wall -x c -I ./include/ -O2 -ffunction-sections -fdata-sections -fu
 
 all : build
 
-build : main.o build_ex1 build_ex4 build_ex5
+build : main.o masker_main server.o build_ex5
 	$(CC) lib/main.o -o bin/tarea-lab3
 	chmod 774 bin/tarea-lab3
 
@@ -31,19 +31,22 @@ clean_ex5 :
 	rm bin/client
 	rm bin/logger-server
 
-build_ex1 : create_masker random_lib.o
-	$(CC) -lm lib/masker.o lib/random_lib.o -o bin/masker
+build_ex1 : create_masker masker_main random_lib.o
+	$(CC) -lm lib/masker.o lib/random_lib.o lib/masker_main.o -o bin/masker
 
 build_ex4 : server.o client.o
 	$(CC) lib/server.o -o bin/server
 	$(CC) lib/client.o -o bin/client
 
-build_ex5 : logger-server.o client.o build_ex1
-	$(CC) -lm lib/logger-server.o lib/masker.o -o bin/logger-server
+build_ex5 : logger-server.o client.o build_ex1 random_lib.o create_masker
+	$(CC) -lm lib/logger-server.o lib/masker.o lib/random_lib.o -o bin/logger-server
 	$(CC) lib/client.o -o bin/client
 	
 create_masker :
 	$(CC) $(CFLAGS) src/masker.c -o lib/masker.o
+
+masker_main :
+	$(CC) $(CFLAGS) src/masker_main.c -o lib/masker_main.o
 
 random_lib.o :
 	$(CC) $(CFLAGS) src/random_lib.c -o lib/random_lib.o

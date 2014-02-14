@@ -1,12 +1,11 @@
-#include "random_lib.h"
-#include <stdlib.h>
-#include <string.h>
+#include "masker_lib.h"
 
 /*
- * Aplica una máscara de valor constante a un número aleatoreo de 32 bits.
- * Aplica 3 máscaras: una con OR, otra con AND  y otra con XOR; mostrando
- * siempre el número binario original en pantalla, la máscara y los resultados
- * de las 3 operaciones.
+ * Define operaciones para enmascarar enteros de 32 bits signados.
+ *
+ * En redes, usualmente la máscara utilizada es aplicando el operador bitewise
+ * AND (int & int). Sin embargo, incluye definiciones para operar con OR
+ * (int | int) y XOR (int ^ int) para hacer el programa más general.
  *
  * Autor: Manuel Ignacio Castillo López; 3-0801743-8.
  * manuel_castillo_cc@ciencias.unam.mx
@@ -15,43 +14,22 @@
  * Version 1, febrero 2014
  */
 
-// máscara constante
-unsigned int mask = 20011992;
 
-// prototipos de funciones
-char *dectobin(int);
-void strrev(char *);
 
-/*
- * Ejecuta el programa: crea un número a enmascarar, muestra sus bits, los de
- * la máscara y de los resultados al aplicar las máscaras
- */
-int main(void)
+int andmask(int tomask, int mask)
 {
-	unsigned int to_mask = (unsigned int) ale0a(mask);
-	unsigned int result;
-	printf("Se va a enmascarar: (En decimal)\t%i\n", to_mask);
-	printf("(En binario)\t%s\n\n", dectobin(to_mask));
-	printf("Se va a usar la m\u00E1scara: (En decimal)\t%i\n", mask);
-	printf("(En binario)\t%s\n\n", dectobin(mask));
-	printf("Se aplica la m\u00E1scara con AND\n\n");
-	result = mask &to_mask;
-	printf("El resultado es: (En decimal)\t%i\n", result);
-	printf("(En binario)\t%s\n\n", dectobin(result));
-	printf("Se aplica la m\u00E1scara con OR\n\n");
-	result = mask |to_mask;
-	printf("El resultado es: (En decimal)\t%i\n", result);
-	printf("(En binario)\t%s\n\n", dectobin(result));
-	printf("Se aplica la m\u00E1scara con XOR\n\n");
-	result = mask ^to_mask;
-	printf("El resultado es: (En decimal)\t%i\n", result);
-	printf("(En binario)\t%s\n\n", dectobin(result));
-	char nothing[1024];
-	printf("Presione intro para salir...\n");
-	fgets(nothing, 1024, stdin);
-	system("clear");
-	return 0;
-}//main
+	return mask &tomask;
+}//andmask
+
+int ormask(int tomask, int mask)
+{
+	return mask |tomask;
+}//ormask
+
+int xormask(int tomask, int mask)
+{
+	return mask ^tomask;
+}//xormask
 
 /*
  * Imprime en pantalla los bits de un número de 32 bits

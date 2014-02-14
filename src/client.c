@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <netdb.h>
 
 /*
  * Cliente que solicita conexión al servidor de mensajes por medio del puerto;
@@ -26,11 +28,10 @@ void error(const char *);
  */
 int main(int argc, char *argv[])
 {
-	if(argc < 1)
+	if(argc < 2)
 	{
 		error("(Cliente) ERROR debe proporcionar un servidor.\nPor ejemplo \"localhost\"");
 	}//comprueba que almenos se le pasó un argumento
-	pid_t = getpid();
 	int sockfd, portno, n;
 	struct sockaddr_in serv_addr;
 	struct hostent *server;
@@ -41,9 +42,9 @@ int main(int argc, char *argv[])
 	{
 		error("(Cliente) ERROR al abrir el socket\n");
 	}//comprueba que se tenga un socket válido
-	server = gethostbyname(argv[0]);
+	server = gethostbyname(argv[1]);
 	if (server == NULL) {
-	    fprintf(stderr,"(Cliente PID %d) ERROR, host inv\u00E1lido\n", pid);
+	    fprintf(stderr,"(Cliente) ERROR, host inv\u00E1lido\n");
 	    exit(0);
 	}//comprueba que se haya podido resolver el server
 	bzero((char *) &serv_addr, sizeof(serv_addr));
@@ -58,8 +59,8 @@ int main(int argc, char *argv[])
 	printf("(Hijo) Cliente de env\u00EDo de mensajes.\n\n");
 	while(1)
 	{
-		printf("(Cliente PID %d) Introduzca un mensaje para enviar al server.\n", pid);
-		printf("(Cliente PID %d) Si desea salir introduzca \"EXIT\".", pid);
+		printf("(Cliente) Introduzca un mensaje para enviar al server.\n");
+		printf("(Cliente) Si desea salir introduzca \"EXIT\".");
 		printf(" Esto enviar\u00E1 una se\u00F1al de apagado al servidor tambi\u00E9n.\n");
 		bzero(buffer,256);
 	    fgets(buffer,255,stdin);
@@ -74,7 +75,7 @@ int main(int argc, char *argv[])
 			if(strcmp(buffer, "EXIT") == 0)
 			{
 				close(sockfd);
-				printf("(Cliente PID %d) Fin del proceso cliente\n", pid);
+				printf("(Cliente) Fin del proceso cliente\n");
 				exit(EXIT_SUCCESS);
 			}//si lo que se introdujo fue el comando de salida
 		}//comprueba que la escritura haya sido exitosa
