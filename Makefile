@@ -4,7 +4,7 @@ CFLAGS = -c -Wall -x c -I ./include/ -O2 -ffunction-sections -fdata-sections -fu
 
 all : build
 
-build : main.o masker_main server.o build_ex5
+build : main.o masker_main server.o ex4_server build_ex5
 	$(CC) lib/main.o -o bin/tarea-lab3
 	chmod 774 bin/tarea-lab3
 
@@ -58,13 +58,16 @@ exec_ex1 :
 	bin/masker
 
 exec_ex4 :
-	bin/client-server
+	bin/client
 
 exec_ex5 :
 	bin/loggin-client-server
 
 server.o :
 	$(CC) $(CFLAGS) src/server.c -o lib/server.o
+
+ex4_server :
+	$(CC) lib/server.o -o bin/server
 
 client.o :
 	$(CC) $(CFLAGS) src/client.c -o lib/client.o

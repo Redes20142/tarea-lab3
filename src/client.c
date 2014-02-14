@@ -20,6 +20,12 @@
 
 //prototipos de funciones
 void error(const char *);
+void connecttoserver(char *);
+
+// variables globales
+int sockfd, portno, n;
+struct sockaddr_in serv_addr;
+struct hostent *server;
 
 /*
  * Inicia el cliente y espera establecer una conexión con el servidor para
@@ -30,32 +36,11 @@ int main(int argc, char *argv[])
 {
 	if(argc < 2)
 	{
-		error("(Cliente) ERROR debe proporcionar un servidor.\nPor ejemplo \"localhost\"");
+		error("(Cliente) ERROR debe proporcionar un servidor.\nPor ejemplo \"localhost\"\n");
 	}//comprueba que almenos se le pasó un argumento
-	int sockfd, portno, n;
-	struct sockaddr_in serv_addr;
-	struct hostent *server;
 	char buffer[256];
 	portno = 10080;
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd < 0)
-	{
-		error("(Cliente) ERROR al abrir el socket\n");
-	}//comprueba que se tenga un socket válido
-	server = gethostbyname(argv[1]);
-	if (server == NULL) {
-	    fprintf(stderr,"(Cliente) ERROR, host inv\u00E1lido\n");
-	    exit(0);
-	}//comprueba que se haya podido resolver el server
-	bzero((char *) &serv_addr, sizeof(serv_addr));
-	serv_addr.sin_family = AF_INET;
-	bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr,
-		server -> h_length);
-	serv_addr.sin_port = htons(portno);
-	if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
-	{
-		error("(Cliente) ERROR al conectar\n");
-	}//establece conexión y comprueba el estado de la misma
+	connecttoserver(argv[1]);
 	/*
 	 *si el server a aceptado nuestra solicitud de conexión, esperamos que nos
 	 * haya contestado con un nuevo número de puerto al que nos vamos a
@@ -67,8 +52,15 @@ int main(int argc, char *argv[])
 	{
 		error("(Cliente) ERROR al teminar la negociaci\u00F3n con el servidor: No se ha podido recuperar el nuevo n\u00FAmero de puerto\n");
 	}//comprueba que la comunicación haya sido exitosa
+	printf("(Cliente) se cambia el n\u00FAmero de puerto a comunicarse con el servidor con el %s\n", buffer);
 	portno = atoi(buffer);
-	// cerrar conexión vieja y crear nueva con el nuevo puerto
+	close(sockfd);
+	/*
+	 * Éste programa tiene el defecto de que si el servidor no responde o su
+	 * respuesta se pierde, el cliente lo va a esperar por un tiempo indefinido
+	 */
+	connecttoserver(argv[1]);
+	// cierra conexión vieja y crea nueva con el nuevo puerto dado
 	printf("(Hijo) Cliente de env\u00EDo de mensajes.\n\n");
 	while(1)
 	{
@@ -111,4 +103,30 @@ void error(const char *msg)
     perror(msg);
     exit(EXIT_FAILURE);
 }//error
+
+/*
+ * Realiza la conexión con el server haciendo una petición de conexión
+ */
+void connecttoserver(char *servername)
+{
+	sockfd = socket(AF_INET, SOCK_STREAM, 0);
+	if (sockfd < 0)
+	{
+		error("(Cliente) ERROR al abrir el socket\n");
+	}//comprueba que se tenga un socket válido
+	server = gethostbyname(servername);
+	if (server == NULL) {
+	    fprintf(stderr,"(Cliente) ERROR, host inv\u00E1lido\n");
+	    exit(0);
+	}//comprueba que se haya podido resolver el server
+	bzero((char *) &serv_addr, sizeof(serv_addr));
+	serv_addr.sin_family = AF_INET;
+	bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr,
+		server -> h_length);
+	serv_addr.sin_port = htons(portno);
+	if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0)
+	{
+		error("(Cliente) ERROR al conectar\n");
+	}//establece conexión y comprueba el estado de la misma
+}//connect
 

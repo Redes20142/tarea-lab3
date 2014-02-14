@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 	}
 	else
 	{
-		int mask = atoi(argv[2]);
+		mask = atoi(argv[2]);
 	}//si no se le dió un número a enmascarar, genera uno aleatoreamente
 	unsigned int to_mask = atoi(argv[1]);
 	int result;
