@@ -21,6 +21,7 @@
 
 //prototipos de funciones
 void error(const char *);
+void server(void);
 
 /*
  * Ejecuta un servidor de mensajería
@@ -29,18 +30,19 @@ void error(const char *);
  */
 int main(void)
 {
-	int sockfd, newsockfd, portno;
+	int sockfd, newsockfd, portno, auxport;
     socklen_t clilen;
     char buffer[256];
     struct sockaddr_in serv_addr, cli_addr;
     int n;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd < 0)
+    if ((sockfd < 0))
     {
     	error("(Servidor) ERROR al abrir el socket\n");
     }//si ocurrió un problema al obtener un socket
     bzero((char *) &serv_addr, sizeof(serv_addr));
     portno = 10080;
+    auxport = 10100;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
     serv_addr.sin_port = htons(portno);
@@ -50,12 +52,13 @@ int main(void)
     }//enlaza el socket
     listen(sockfd, 5);
     clilen = sizeof(cli_addr);
+    printf("(Servidor) Servidor de mensajes\n");
     newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
     if (newsockfd < 0)
     {
     	error("(Servidor) ERROR al aceptar\n");
     }//si el socket de respuesta no es válido
-    printf("(Servidor) Servidor de mensajes\n");
+    // al escuchar un cliente; darle un socket nuevo
     while(1)
     {
     	bzero(buffer,256);
@@ -80,4 +83,12 @@ int main(void)
     }//ejecuta indefinidamente
 	return 0;
 }//main
+
+/*
+ * Atiende a un cliente
+ */
+void server(void)
+{
+
+}//server
 

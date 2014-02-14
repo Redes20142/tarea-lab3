@@ -56,6 +56,19 @@ int main(int argc, char *argv[])
 	{
 		error("(Cliente) ERROR al conectar\n");
 	}//establece conexión y comprueba el estado de la misma
+	/*
+	 *si el server a aceptado nuestra solicitud de conexión, esperamos que nos
+	 * haya contestado con un nuevo número de puerto al que nos vamos a
+	 * conectar comunicar con él
+	 */
+	bzero(buffer, 256);
+	n = read(sockfd, buffer, 255);
+	if(n < 0)
+	{
+		error("(Cliente) ERROR al teminar la negociaci\u00F3n con el servidor: No se ha podido recuperar el nuevo n\u00FAmero de puerto\n");
+	}//comprueba que la comunicación haya sido exitosa
+	portno = atoi(buffer);
+	// cerrar conexión vieja y crear nueva con el nuevo puerto
 	printf("(Hijo) Cliente de env\u00EDo de mensajes.\n\n");
 	while(1)
 	{
@@ -69,7 +82,7 @@ int main(int argc, char *argv[])
 		if (n < 0)
 		{
 			error("(Cliente) ERROR al escribir al socket\n");
-		}
+		}//comprueba que la comunicación haya sido exitosa
 		else
 		{
 			if(strcmp(buffer, "EXIT") == 0)
