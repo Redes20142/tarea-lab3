@@ -30,16 +30,16 @@ int main(int argc, char *argv[])
 		printf("ERROR Vuelva a llamar el programa con un n\u00FAmero a enmascarar\n");
 		return 1;
 	}//comprueba que se haya pasado un argumento
-	int mask;
-	if(argc == 2)
+	unsigned int mask;
+	unsigned int to_mask = atoi(argv[1]);
+	if(argc == 3)
 	{
-		mask = (unsigned int) ale0a(mask);
+		mask = atoi(argv[2]);
 	}
 	else
 	{
-		mask = atoi(argv[2]);
+		mask = (unsigned int) ale0a(to_mask);
 	}//si no se le dió un número a enmascarar, genera uno aleatoreamente
-	unsigned int to_mask = atoi(argv[1]);
 	int result;
 	printf("Se va a enmascarar: (En decimal)\t%i\n", to_mask);
 	printf("(En binario)\t%s\n\n", dectobin(to_mask));

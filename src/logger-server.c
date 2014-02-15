@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <time.h>
+#include "masker_lib.h"
 
 /*
  * Servidor que escucha peticiones en el puerto 10080 y responde en
@@ -29,15 +29,39 @@ void setupserver(int);
 int sockfd, newsockfd, portno, auxport;
 socklen_t clilen;
 struct sockaddr_in serv_addr, cli_addr;
-int n;
+/*
+ * masking_type indica el tipo de enmascaramiento: para minúsculas 0 y
+ * mayúsuclas 1
+ */
+int n, masking_type;
 
 /*
  * Ejecuta un servidor de mensajería
  * Se le pasa el PID con propósito de poderlo identificar en monitoreos de red.
  * Instancia un nuevo proceso para atender a cada cliente que llega.
  */
-int main(void)
+int main(int argc, char *argv[])
 {
+    if(argc > 1)
+    {
+    	if(strcmp(argv[1], "-m") == 0)
+    	{
+    		masking_type = 0;
+    	}
+    	else if(strcmp(argv[1], "-M") == 0)
+    	{
+    		masking_type = 1;
+    	}
+    	else
+    	{
+    		printf("\"%s\" no es un modificador reconocido.\n", argv[1]);
+    		exit(EXIT_FAILURE);
+    	}//actua dependiendo el modificador que se le pase
+    }
+    else
+    {
+    	masking_type = 1;
+    }//si se le pasó al menos una bandera. Por omisión filtra mayúsculas
     char buffer[256];
     portno = 10080;
     auxport = 10100;
@@ -109,25 +133,19 @@ int main(void)
 void server(int sock, int pid)
 {
 	char buffer[256];
-	time_t rawtime;
-	struct tm *info;
-	char timestr[15];
-	time(&rawtime);
-	info = localtime(&rawtime);
-	strftime(timestr, 15, "%d-%b-%Y", info);
-	char filename[256] = "";
-	strcat(filename, timestr);
-	strftime(timestr, 15, "-%H:%M:%S", info);
-	strcat(filename, timestr);
-	strcat(filename, "-PID:");
-	sprintf(timestr, "%d", pid);
-	strcat(filename, timestr);
-	strcat(filename, ":PORT:");
-	sprintf(timestr, "%d", sock);
-	strcat(filename, timestr);
-	strcat(filename, ".txt");
+	char *filename;
+	unsigned int i, length;
+	if(masking_type)
+	{
+		filename = "SERVIDOR.log";
+		printf("El servidor est\u00E1 filtrando may\u00FAsculas en \"%s\"\n", filename);
+	}
+	else
+	{
+		filename = "servidor.log";
+		printf("El servidor est\u00E1 filtrando min\u00FAsculas en \"%s\"\n", filename);
+	}//indica que está filtrando
 	FILE *log = fopen(filename, "ab+");
-	char maskedaux[256];
 	while(1)
     {
 		bzero(buffer, 256);
@@ -146,8 +164,38 @@ void server(int sock, int pid)
 		else
 		{
 			printf("(Servidor PID %i: SOCK:%i) Se ha recibido el mensaje: \"%s\"\n", pid, sock, buffer);
-			//TODO poner en maskedaux los que sobrevivan al filtrado de MAYÚSCULAS
-			fprintf(log, "%s\n", maskedaux);
+			/*
+			 * Sabemos que una cadena de C es un arreglo de enteros de 8 bits;
+			 * siendo éstos un ASCII.
+			 * De acuerdo a el estándar de ASCII; las letras mayúsculas y
+			 * minúsculas difieren por un sólo bit. Si observamos una tabla de
+			 * ASCII, nos vamos a encontrar que primero se encuentran las
+			 * mayúsuculas (en orden de sus valores numéricos correspondientes)
+			 * comenzando con A = 65 = 0100 0001 y terminando con Z = 90 =
+			 * 0101 1010. Tras algunos carácteres; aparecen las minúsculas: con
+			 * a = 97 = 0110 0001 y terminando con z = 122 = 0111 1010.
+			 * Si somos observadores, nos daremos cuenta que ambas
+			 * codificaciones difieren únicamente por el tercer bit más
+			 * significativo (big endian). Si utilizamos una máscara con el
+			 * valor 32 = 0010 0000 y la operación AND, al aplicarla a un
+			 * caracter ASCII en mayúsuculas, obtendremos un resultado igual a
+			 * 0. En otro caso; el resultado será distinto de 0. Ésta es la
+			 * máscara y operación que utilizaremos para filtrar éste tipo de
+			 * caracteres al LOG
+			 */
+			length = strlen(buffer);
+			for(i = 0; i < length; i++)
+			{
+				if(masking_type && !andmask(32, buffer[i]))
+				{
+					fprintf(log, "%c", buffer[i]);
+				}
+				else if(!masking_type && andmask(32, buffer[i]))
+				{
+					fprintf(log, "%c", buffer[i]);
+				}//observamos si es mayúsucla o minúscula de acuerdo a lo anterior
+			}//analizamos todos los carácteres de la cadena a guardar en el log
+			fprintf(log, "%s", "\n");
 		}//si se recibió el comando de salida
 		n = write(newsockfd, "Mensaje recibido", 18);
 		if (n < 0)

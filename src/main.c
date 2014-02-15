@@ -35,8 +35,9 @@ int main(void)
 		printf("Men\u00FA de programas en la tarea.\n");
 		printf("Introduzca la opci\u00F3n que desea ejecutar:\n");
 		printf("1\tAplicar m\u00E1scaras sobre datos a nivel de bits.\n");
-		printf("2\tIniciar el cliente de mensajes");
-		printf("3\tIniciar  el servidor");
+		printf("2\tIniciar el cliente de mensajes.\n");
+		printf("3\tIniciar el servidor.\n");
+		printf("4\tIniciar el servidor con registro de mensajes.\n");
 		printf("E\tSalir.\n");
 		fgets(input, 1024, stdin);
 		if(!strlen(input))
@@ -49,16 +50,34 @@ int main(void)
 		case '1' :
 			args[0] = "./bin/masker";
 			printf("Introduzca un entero de 32 bits a utilizar como m\u00E1scara\n");
-			fgets(args[1], 256, stdin);
+			fgets(input, 256, stdin);
+			args[1] = input;
 			break;
 		case '2' :
 			args[0] = "./bin/client";
 			printf("Especifique el server\n");
-			fgets(args[1], 256, stdin);
+			fgets(input, 256, stdin);
+			args[1] = input;
 			break;
 		case '3' :
 			args[0] = "./bin/server";
 			args[1] = "0";
+			execvp(args[0], args);
+			break;
+		case '4' :
+			args[0] = "./bin/logger-server";
+			printf("\u00BFDesea filtrar may\u00FAsculas o minusculas? (0/1)\n");
+			printf("Por omisi\u00F3n se filtrar\u00E1n may\u00FAsculas.\n");
+			fgets(input, 256, stdin);
+			if(!strlen(input) || input[0] != '1')
+			{
+				args[1] = "-M";
+			}
+			else
+			{
+				args[1] = "-m";
+			}//indica el tipo de enmascaramiento a utilizar
+			execvp(args[0], args);
 			break;
 		case 'e' :
 			system("clear");
