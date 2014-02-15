@@ -21,7 +21,7 @@
 
 //prototipos de funciones
 void error(const char *);
-void server(int);
+void server(int, int);
 void setupserver(int);
 
 //variables globales
@@ -29,7 +29,6 @@ int sockfd, newsockfd, portno, auxport;
 socklen_t clilen;
 struct sockaddr_in serv_addr, cli_addr;
 int n;
-char buffer[256];
 
 /*
  * Ejecuta un servidor de mensajería
@@ -38,6 +37,7 @@ char buffer[256];
  */
 int main(void)
 {
+    char buffer[256];
     portno = 10080;
     auxport = 10100;
     printf("(Servidor) Servidor de mensajes\n");
@@ -50,6 +50,7 @@ int main(void)
      */
     char aux[256];
     int pid;
+    int pidaux;
     while(1)
     {
     	newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
@@ -79,11 +80,19 @@ int main(void)
 		}
 		else if(pid == 0)
 		{
-			close(sockfd);
+			pidaux = getpid();
+			printf("(Servidor PID %i) Preparando...\n", pidaux);
 			close(newsockfd);
-			sleep(1);
+			close(sockfd);
 			setupserver(auxport -1);
-			server(auxport -1);
+			newsockfd = accept(sockfd, (struct sockaddr *) &cli_addr, &clilen);
+			if (newsockfd < 0)
+			{
+				error("(Servidor) ERROR al aceptar\n");
+			}//si el socket de respuesta no es válido
+			printf("(Servidor PID %i) Listo para atender\n", getpid());
+			server(auxport -1, pidaux);
+			exit(EXIT_FAILURE);
 		}
 		else
 		{
@@ -96,24 +105,25 @@ int main(void)
 /*
  * Atiende a un cliente
  */
-void server(int sock)
+void server(int sock, int pid)
 {
+	char buffer[256];
 	while(1)
     {
 		bzero(buffer, 256);
-		n = read(sock, buffer, 255);
+		n = read(newsockfd, buffer, 255);
 		if (n < 0)
 		{
 			error("(Servidor) ERROR al leer el socket\n");
 		}//si se pudo leer el socjet de entrada
-		printf("(Servidor:%i) Se ha recibido el mensaje: \"%s\"\n", sock, buffer);
+		printf("(Servidor PID %i: SOCK:%i) Se ha recibido el mensaje: \"%s\"\n", pid, sock, buffer);
 		if(strcmp(buffer, "EXIT") == 0)
 		{
-			close(sock);
-		   	printf("(Servidor:%i) Fin de proceso servidor\n", sock);
+			close(newsockfd);
+		   	printf("(Servidor PID %i: SOCK:%i) Fin de proceso servidor\n", pid, sock);
 		   	exit(EXIT_SUCCESS);
 		}//si se recibió el comando de salida
-		n = write(sock, "Mensaje recibido", 18);
+		n = write(newsockfd, "Mensaje recibido", 18);
 		if (n < 0)
 		{
 			error("(Servidor) ERROR al escribir al socket\n");

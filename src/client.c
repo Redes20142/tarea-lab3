@@ -24,8 +24,6 @@ void connecttoserver(char *);
 
 // variables globales
 int sockfd, portno, n;
-struct sockaddr_in serv_addr;
-struct hostent *server;
 
 /*
  * Inicia el cliente y espera establecer una conexión con el servidor para
@@ -48,20 +46,22 @@ int main(int argc, char *argv[])
 	 */
 	bzero(buffer, 256);
 	n = read(sockfd, buffer, 255);
+	close(sockfd);
 	if(n < 0)
 	{
 		error("(Cliente) ERROR al teminar la negociaci\u00F3n con el servidor: No se ha podido recuperar el nuevo n\u00FAmero de puerto\n");
 	}//comprueba que la comunicación haya sido exitosa
 	printf("(Cliente) se cambia el n\u00FAmero de puerto a comunicarse con el servidor con el %s\n", buffer);
 	portno = atoi(buffer);
-	close(sockfd);
+	// le damos un momento al server para instanciar los nuevos servicios
+	sleep(1);
 	/*
 	 * Éste programa tiene el defecto de que si el servidor no responde o su
 	 * respuesta se pierde, el cliente lo va a esperar por un tiempo indefinido
 	 */
 	connecttoserver(argv[1]);
 	// cierra conexión vieja y crea nueva con el nuevo puerto dado
-	printf("(Hijo) Cliente de env\u00EDo de mensajes.\n\n");
+	printf("(Cliente) Cliente de env\u00EDo de mensajes.\n\n");
 	while(1)
 	{
 		printf("(Cliente) Introduzca un mensaje para enviar al server.\n");
@@ -109,6 +109,8 @@ void error(const char *msg)
  */
 void connecttoserver(char *servername)
 {
+	struct sockaddr_in serv_addr;
+	struct hostent *server;
 	sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	if (sockfd < 0)
 	{
