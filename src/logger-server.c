@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <time.h>
 
 /*
  * Servidor que escucha peticiones en el puerto 10080 y responde en
@@ -108,6 +109,25 @@ int main(void)
 void server(int sock, int pid)
 {
 	char buffer[256];
+	time_t rawtime;
+	struct tm *info;
+	char timestr[15];
+	time(&rawtime);
+	info = localtime(&rawtime);
+	strftime(timestr, 15, "%d-%b-%Y", info);
+	char filename[256] = "";
+	strcat(filename, timestr);
+	strftime(timestr, 15, "-%H:%M:%S", info);
+	strcat(filename, timestr);
+	strcat(filename, "-PID:");
+	sprintf(timestr, "%d", pid);
+	strcat(filename, timestr);
+	strcat(filename, ":PORT:");
+	sprintf(timestr, "%d", sock);
+	strcat(filename, timestr);
+	strcat(filename, ".txt");
+	FILE *log = fopen(filename, "ab+");
+	char maskedaux[256];
 	while(1)
     {
 		bzero(buffer, 256);
@@ -116,12 +136,18 @@ void server(int sock, int pid)
 		{
 			error("(Servidor) ERROR al leer el socket\n");
 		}//si se pudo leer el socjet de entrada
-		printf("(Servidor PID %i: SOCK:%i) Se ha recibido el mensaje: \"%s\"\n", pid, sock, buffer);
 		if(strcmp(buffer, "EXIT") == 0)
 		{
 			close(newsockfd);
+			fclose(log);
 		   	printf("(Servidor PID %i: SOCK:%i) Fin de proceso servidor\n", pid, sock);
 		   	exit(EXIT_SUCCESS);
+		}
+		else
+		{
+			printf("(Servidor PID %i: SOCK:%i) Se ha recibido el mensaje: \"%s\"\n", pid, sock, buffer);
+			//TODO poner en maskedaux los que sobrevivan al filtrado de MAYÚSCULAS
+			fprintf(log, "%s\n", maskedaux);
 		}//si se recibió el comando de salida
 		n = write(newsockfd, "Mensaje recibido", 18);
 		if (n < 0)

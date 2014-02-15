@@ -116,12 +116,15 @@ void server(int sock, int pid)
 		{
 			error("(Servidor) ERROR al leer el socket\n");
 		}//si se pudo leer el socjet de entrada
-		printf("(Servidor PID %i: SOCK:%i) Se ha recibido el mensaje: \"%s\"\n", pid, sock, buffer);
 		if(strcmp(buffer, "EXIT") == 0)
 		{
 			close(newsockfd);
 		   	printf("(Servidor PID %i: SOCK:%i) Fin de proceso servidor\n", pid, sock);
 		   	exit(EXIT_SUCCESS);
+		}
+		else
+		{
+			printf("(Servidor PID %i: SOCK:%i) Se ha recibido el mensaje: \"%s\"\n", pid, sock, buffer);
 		}//si se recibió el comando de salida
 		n = write(newsockfd, "Mensaje recibido", 18);
 		if (n < 0)
