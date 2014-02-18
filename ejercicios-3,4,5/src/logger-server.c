@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <sys/types.h> 
 #include <sys/socket.h>
@@ -133,19 +134,20 @@ int main(int argc, char *argv[])
 void server(int sock, int pid)
 {
 	char buffer[256];
-	char *filename;
 	unsigned int i, length;
+	char *filename;
+	FILE *log;
+	char msg[512];
 	if(masking_type)
 	{
 		filename = "SERVIDOR.log";
+		log = fopen(filename, "ab+");
 		printf("El servidor est\u00E1 filtrando may\u00FAsculas en \"%s\"\n", filename);
 	}
 	else
 	{
-		filename = "servidor.log";
-		printf("El servidor est\u00E1 filtrando min\u00FAsculas en \"%s\"\n", filename);
+		printf("El servidor est\u00E1 filtrando min\u00FAsculas en \"servidor.log\"\n");
 	}//indica que está filtrando
-	FILE *log = fopen(filename, "ab+");
 	while(1)
     {
 		bzero(buffer, 256);
@@ -154,10 +156,14 @@ void server(int sock, int pid)
 		{
 			error("(Servidor) ERROR al leer el socket\n");
 		}//si se pudo leer el socjet de entrada
+		printf(buffer);
 		if(strcmp(buffer, "EXIT") == 0)
 		{
 			close(newsockfd);
-			fclose(log);
+			if(masking_type)
+			{
+				fclose(log);
+			}//cierra el log
 		   	printf("(Servidor PID %i: SOCK:%i) Fin de proceso servidor\n", pid, sock);
 		   	exit(EXIT_SUCCESS);
 		}
@@ -184,18 +190,22 @@ void server(int sock, int pid)
 			 * caracteres al LOG
 			 */
 			length = strlen(buffer);
-			for(i = 0; i < length; i++)
+			for(i = 0; (i < length) && masking_type; i++)
 			{
-				if(masking_type && !andmask(32, buffer[i]))
+				if(!andmask(32, buffer[i]))
 				{
 					fprintf(log, "%c", buffer[i]);
-				}
-				else if(!masking_type && andmask(32, buffer[i]))
-				{
-					fprintf(log, "%c", buffer[i]);
+					fprintf(log, "%s", "\n");
 				}//observamos si es mayúsucla o minúscula de acuerdo a lo anterior
 			}//analizamos todos los carácteres de la cadena a guardar en el log
-			fprintf(log, "%s", "\n");
+			if(!masking_type)
+			{
+				memset(msg, 0, strlen(msg));
+				strcat(msg, "echo \"");
+				strcat(msg, buffer);
+				strcat(msg, "\" | sed \'s/[A-Z]//g\' >> servidor.log");
+				system(msg);
+			}//filtra minúsculas
 		}//si se recibió el comando de salida
 		n = write(newsockfd, "Mensaje recibido", 18);
 		if (n < 0)
